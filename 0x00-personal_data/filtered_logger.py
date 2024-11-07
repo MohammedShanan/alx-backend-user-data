@@ -64,3 +64,22 @@ class RedactingFormatter(logging.Formatter):
         msg = super(RedactingFormatter, self).format(record)
         txt = filter_datum(self.fields, self.REDACTION, msg, self.SEPARATOR)
         return txt
+
+
+def main():
+    """Logs the information about user records in a table."""
+    info_logger = get_logger()
+    connection = get_db()
+
+    query = "SELECT name, email, phone, ssn, password, ip, last_login, user_agent FROM users;"
+    columns = query.replace("SELECT ", "").replace(" FROM users;", "").split(", ")
+
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        for row in cursor.fetchall():
+            msg = "; ".join(f"{col}={val}" for col, val in zip(columns, row)) + ";"
+            info_logger.info(msg)
+
+
+if __name__ == "__main__":
+    main()
